@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+*.ipch
+*/v17/*
+.vs/*
+*.log
+*/x64/*
+x64/*
+packages/*
