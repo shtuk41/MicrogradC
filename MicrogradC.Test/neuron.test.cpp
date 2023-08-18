@@ -76,7 +76,7 @@ TEST(TestNeuron, Layer)
 	}
 }
 
-/*TEST(TestNeuron, MLP)
+TEST(TestNeuron, MLP)
 {
 	std::vector<int> layersizes;
 
@@ -100,7 +100,7 @@ TEST(TestNeuron, Layer)
 		val->backward();
 		trace(*val);
 	}
-}*/
+}
 
 void make_input(std::vector<std::shared_ptr<value>>& x, int num, const float * ar)
 {
@@ -112,7 +112,7 @@ void make_input(std::vector<std::shared_ptr<value>>& x, int num, const float * a
 	}
 }
 
-/*TEST(TestNeuron, MLP_2)
+TEST(TestNeuron, MLP_2)
 {
 	std::vector<int> layersizes;
 
@@ -143,9 +143,9 @@ void make_input(std::vector<std::shared_ptr<value>>& x, int num, const float * a
 		trace(*val);
 	}
 }
-*/
 
-/*TEST(TestNeuron, MLP_MultipleSamples)
+
+TEST(TestNeuron, MLP_MultipleSamples)
 {
 	std::vector<int> layersizes;
 
@@ -205,9 +205,8 @@ void make_input(std::vector<std::shared_ptr<value>>& x, int num, const float * a
 
 	std::cout << "TotalLoss: " << totalLoss << std::endl;
 }
-*/
 
-/*TEST(TestNeuron, MLP_Backprop)
+TEST(TestNeuron, MLP_Backprop)
 {
 	std::vector<int> layersizes;
 
@@ -261,7 +260,7 @@ void make_input(std::vector<std::shared_ptr<value>>& x, int num, const float * a
 	std::cout << "check calculated loss: " << floss << std::endl;
 
 }
-*/
+
 
 TEST(TestNeuron, MLP_Backprop_loss)
 {
@@ -313,6 +312,8 @@ TEST(TestNeuron, MLP_Backprop_loss)
 	value* localSum23 = new value(*localSum2 + *localSum3); localSum23->set_label("localSum23");
 	value* localSum0123 = new value(*localSum01 + (*localSum23)); localSum0123->set_label("localSum0123");
 
+
+	localSum0123->backward();
 	trace(*localSum0123);
 
 
