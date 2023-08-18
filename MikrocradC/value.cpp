@@ -1,7 +1,7 @@
 #include "pch.h"
 #include <iostream>
 #include <iomanip>
-#include <value.h>
+#include "..\MikrocradC\value.h"
 
 value operator+(float f, value& v)
 {

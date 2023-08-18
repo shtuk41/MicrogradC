@@ -14,6 +14,7 @@ private:
 	std::vector<value> weights;
 	value bias; 
 	std::vector<std::shared_ptr<value>> values;
+	std::vector< std::vector<std::shared_ptr<value>>> values_mem;
 	std::shared_ptr<value> out;
 	
 public:
@@ -50,6 +51,8 @@ public:
 	{
 		assert(weights.size() == inputs.size());
 
+		values.clear();
+
 		auto itw = weights.begin();
 		std::vector<std::shared_ptr<value>>::const_iterator iti = inputs.begin();
 
@@ -81,6 +84,8 @@ public:
 		out = std::make_shared<value>(value(values.back()->tanh())); out->set_label(std::string("out") + std::to_string(count));
 		count++;
 
+		values_mem.push_back(values);
+
 		return out;
 	}
 
@@ -106,6 +111,8 @@ private:
 	size_t numberOfInputs;
 	size_t numberOfOutputs;
 	std::vector<neuron> neourons;
+	std::vector<std::shared_ptr<value>> outs;
+	std::vector< std::vector<std::shared_ptr<value>>> outs_mem;
 
 
 public:
@@ -119,14 +126,16 @@ public:
 
 	std::vector<std::shared_ptr<value>> operator()(std::vector<std::shared_ptr<value>> x)
 	{
-		std::vector<std::shared_ptr<value>> outs;
+		outs.clear();
 
 		for (std::vector<neuron>::iterator it = neourons.begin(); it != neourons.end(); ++it)
 		{
 			outs.push_back((*it)(x));
 		}
 
-		return outs;
+		outs_mem.push_back(outs);
+
+		return outs_mem.back();
 	}
 };
 
@@ -134,6 +143,7 @@ class mlp
 {
 private:
 	std::vector<layer> layers;
+	std::vector<std::vector<std::shared_ptr<value>>> results;
 
 public:
 	mlp(int nin, std::vector<int> nouts)
@@ -157,7 +167,9 @@ public:
 			a = (*it)(a);
 		}
 
-		return a;
+		results.push_back(a);
+
+		return results.back();
 	}
 };
 
