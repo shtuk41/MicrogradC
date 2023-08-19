@@ -287,30 +287,30 @@ TEST(TestNeuron, MLP_Backprop_loss)
 
 	make_input(input_values[0], 3, inputs[0]);
 	results[0] = m(input_values[0]);
-	value* localLoss0 = new value(*results[0][0] - desired_targets[0]); localLoss0->set_label("localLoss0");
-	value* localSum0 = new value(*localLoss0 * (*localLoss0)); localSum0->set_label("localSum0");
+	auto localLoss0 = std::make_shared<value>(*results[0][0] - desired_targets[0]); localLoss0->set_label("localLoss0");
+	auto localSum0 = std::make_shared<value>(*localLoss0 * (*localLoss0)); localSum0->set_label("localSum0");
 
 	make_input(input_values[1], 3, inputs[1]);
 	results[1] = m(input_values[1]);
-	value* localLoss1 = new value(*results[1][0] - desired_targets[1]); localLoss0->set_label("localLoss1");
-	value* localSum1 = new value(*localLoss1 * (*localLoss1)); localSum1->set_label("localSum1");
+	auto localLoss1 = std::make_shared<value>(*results[1][0] - desired_targets[1]); localLoss0->set_label("localLoss1");
+	auto localSum1 = std::make_shared<value>(*localLoss1 * (*localLoss1)); localSum1->set_label("localSum1");
 
-	value* localSum01 = new value(*localSum0 + (*localSum1)); localSum01->set_label("localSum01");
+	auto localSum01 = std::make_shared<value>(*localSum0 + (*localSum1)); localSum01->set_label("localSum01");
 	
 
 	make_input(input_values[2], 3, inputs[2]);
 	results[2] = m(input_values[2]);
-	value* localLoss2 = new value(*results[2][0] - desired_targets[2]); localLoss0->set_label("localLoss2");
-	value* localSum2 = new value(*localLoss2 * (*localLoss2)); localSum2->set_label("localSum2");
+	auto localLoss2 = std::make_shared<value>(*results[2][0] - desired_targets[2]); localLoss0->set_label("localLoss2");
+	auto localSum2 = std::make_shared<value>(*localLoss2 * (*localLoss2)); localSum2->set_label("localSum2");
 
 
 	make_input(input_values[3], 3, inputs[3]);
 	results[3] = m(input_values[3]);
-	value* localLoss3 = new value(*results[3][0] - desired_targets[3]); localLoss3->set_label("localLoss3");
-	value* localSum3 = new value(*localLoss3 * (*localLoss3)); localSum3->set_label("localSum3");
+	auto localLoss3 = std::make_shared<value>(*results[3][0] - desired_targets[3]); localLoss3->set_label("localLoss3");
+	auto localSum3 = std::make_shared<value>(*localLoss3 * (*localLoss3)); localSum3->set_label("localSum3");
 
-	value* localSum23 = new value(*localSum2 + *localSum3); localSum23->set_label("localSum23");
-	value* localSum0123 = new value(*localSum01 + (*localSum23)); localSum0123->set_label("localSum0123");
+	auto localSum23 = std::make_shared<value>(*localSum2 + *localSum3); localSum23->set_label("localSum23");
+	auto localSum0123 = std::make_shared<value>(*localSum01 + (*localSum23)); localSum0123->set_label("localSum0123");
 
 
 	localSum0123->backward();
@@ -339,6 +339,73 @@ TEST(TestNeuron, MLP_Backprop_loss)
 	std::cout << "calculated loss: " << *localSum0123 << std::endl;
 	std::cout << "check calculated loss: " << floss << std::endl;
 }
+
+TEST(TestNeuron, MLP_Backprop_loss_iterative)
+{
+	std::vector<int> layersizes;
+
+	layersizes.push_back(4);
+	layersizes.push_back(4);
+	layersizes.push_back(1);
+
+	mlp m(3, layersizes);
+
+	std::vector<std::shared_ptr<value>> input_values[4];
+	std::vector<std::shared_ptr<value>> results[4];
+	std::vector<std::shared_ptr<value>> localLoss;
+	std::vector<std::shared_ptr<value>> localSum;
+
+	float inputs[4][3] = { {2.0f, 3.0f, -1.0f},
+							{3.0f, -1.0f, 0.5f},
+							{0.5f, 1.0f, 1.0f},
+							{1.0f, 1.0f, -1.0f} };
+
+	value desired_targets[4] = { value(1.0f, "target0"),
+								value(-1.0f, "target1"),
+								value(-1.0f, "target2"),
+								value(1.0f , "target3") };
+
+
+	for (int ii = 0; ii < 4; ii++)
+	{
+		make_input(input_values[ii], 3, inputs[ii]);
+		results[ii] = m(input_values[ii]);
+		localLoss.push_back(std::make_shared<value>(*results[ii][0] - desired_targets[ii])); localLoss.back()->set_label(std::string("localLoss") + std::to_string(ii));
+		localSum.push_back(std::make_shared<value>(*(localLoss[ii]) * (*localLoss[ii])));  localSum.back()->set_label(std::string("localSum") + std::to_string(ii));
+	}
+
+	auto localSum01 = std::make_shared<value>(*localSum[0] + *localSum[1]); localSum01->set_label("localSum01");
+	auto localSum23 = std::make_shared<value>(*localSum[2] + *localSum[3]); localSum23->set_label("localSum23");
+	auto localSum0123 = std::make_shared<value>(*localSum01 + *localSum23); localSum0123->set_label("localSum0123");
+
+
+	localSum0123->backward();
+	trace(*localSum0123);
+
+
+	float resultOut[4] = { 0.0f };
+
+	int count = 0;
+
+	float floss = 0.0;
+
+	for (auto result : results)
+	{
+		for (auto r : result)
+		{
+			std::cout << *r << '\n';
+			resultOut[count] = *r;
+
+
+			floss += ((resultOut[count] - desired_targets[count]) * (resultOut[count] - desired_targets[count]));
+			count++;
+		}
+	}
+
+	std::cout << "calculated loss: " << *localSum0123 << std::endl;
+	std::cout << "check calculated loss: " << floss << std::endl;
+}
+
 
 
 
