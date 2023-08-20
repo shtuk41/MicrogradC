@@ -231,7 +231,10 @@ TEST(TestValue, Neuron)
 	auto n = x1w1x2w2 + b; n.set_label("n");
 	auto o = n.tanh(); o.set_label("o");
 
+	
+	o.backward();
 	trace(o);
+
 
 	EXPECT_NEAR(o, 0.6044f, 0.01);
 }

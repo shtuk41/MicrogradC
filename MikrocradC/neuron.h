@@ -11,14 +11,14 @@ class neuron
 {
 private:
 	size_t numberOfInputs;
-	std::vector<value> weights;
-	value bias; 
+	std::vector<std::shared_ptr<value>> weights;
+	std::shared_ptr<value> bias; 
 	std::vector<std::shared_ptr<value>> values;
 	std::vector< std::vector<std::shared_ptr<value>>> values_mem;
 	std::shared_ptr<value> out;
 	
 public:
-	neuron(int nin) :numberOfInputs(nin), bias(value(0.0f, "bias")), out(std::make_shared<value>(-9999999.9f, "invalid"))
+	neuron(int nin) :numberOfInputs(nin), bias(std::make_shared<value>(0.0f, "bias")), out(std::make_shared<value>(-9999999.9f, "invalid"))
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -26,25 +26,34 @@ public:
 
 		for (int ii = 0; ii < nin; ii++)
 		{
-			auto i = value(dis(gen), std::string("weight") + std::to_string(ii));
+			auto i = std::make_shared<value>(dis(gen), std::string("weight") + std::to_string(ii));
 			weights.push_back(i);
 		}
 
-		bias = value(dis(gen), "bias");
+		bias = std::make_shared<value>(dis(gen), "bias");
 	}
 
-	neuron(std::initializer_list<float> weightvals, float biasval) : bias(value(0.0f, "bias"))
+	neuron(std::initializer_list<float> weightvals, float biasval) : bias(std::make_shared<value>(0.0f, "bias"))
 	{
 		int count = 0;
 
 		for (float val : weightvals)
 		{
-			weights.push_back(value(val, std::string("weight" + std::to_string(count))));
+			weights.push_back(std::make_shared<value>(val, std::string("weight" + std::to_string(count))));
 			count++;
 		}
 
 		numberOfInputs = weights.size();
-		bias = value(biasval, "bias");
+		bias = std::make_shared<value>(biasval, "bias");
+	}
+
+	std::vector<std::shared_ptr<value>> parameters()
+	{
+		std::vector<std::shared_ptr<value>> out = weights;
+
+		out.push_back(bias);
+		
+		return out;
 	}
 
 	std::shared_ptr<value> operator()(const std::vector<std::shared_ptr<value>> &inputs)
@@ -62,22 +71,26 @@ public:
 
 		while (itw != weights.end() && iti != inputs.end())
 		{
-			auto mult = std::make_shared<value>(value(*itw * **iti)); mult->set_label(std::string("mult") + std::to_string(count));
+			auto mult = std::make_shared<value>(value(*(*itw) * **iti)); mult->set_label(std::string("mult") + std::to_string(count));
 			values.push_back(mult);
 			count++;
 			++itw;
 			++iti;
 		}
 
-		for (int ii = 0; ii < numberOfInputs - 1; ii++)
+		std::shared_ptr<value> zero = std::make_shared<value>(0.0f, std::string("zero") + std::to_string(count));
+		values.push_back(zero);
+		count++;
+
+		for (int ii = 0; ii < numberOfInputs; ii++)
 		{
-			auto add = std::make_shared<value>(value(*values[ii] + *values[ii + 1])); add->set_label(std::string("add") + std::to_string(count));
-			values.push_back(add);
+			zero = std::make_shared<value>(value(*zero + *values[ii])); zero->set_label(std::string("add") + std::to_string(count));
+			values.push_back(zero);
 			count++;
 		}
 
 
-		auto act = std::make_shared<value>(value(*values.back() + bias)); act->set_label(std::string("act") + std::to_string(count));
+		auto act = std::make_shared<value>(value(*values.back() + *bias)); act->set_label(std::string("act") + std::to_string(count));
 		count++;
 		values.push_back(act);
 
@@ -110,7 +123,7 @@ class layer
 private:
 	size_t numberOfInputs;
 	size_t numberOfOutputs;
-	std::vector<neuron> neourons;
+	std::vector<std::shared_ptr<neuron>> neurons;
 	std::vector<std::shared_ptr<value>> outs;
 	std::vector< std::vector<std::shared_ptr<value>>> outs_mem;
 
@@ -120,17 +133,30 @@ public:
 	{
 		for (int ii = 0; ii < nout; ii++)
 		{
-			neourons.push_back(neuron(nin));
+			neurons.push_back(std::make_shared<neuron>(nin));
 		}
+	}
+
+	std::vector<std::shared_ptr<value>> parameters()
+	{
+		std::vector<std::shared_ptr<value>> params;
+
+		for (auto ii : neurons)
+		{
+			auto p = ii->parameters();
+			params.insert(params.end(), p.begin(), p.end());
+		}
+
+		return params;
 	}
 
 	std::vector<std::shared_ptr<value>> operator()(std::vector<std::shared_ptr<value>> x)
 	{
 		outs.clear();
 
-		for (std::vector<neuron>::iterator it = neourons.begin(); it != neourons.end(); ++it)
+		for (std::vector<std::shared_ptr<neuron>>::iterator it = neurons.begin(); it != neurons.end(); ++it)
 		{
-			outs.push_back((*it)(x));
+			outs.push_back((**it)(x));
 		}
 
 		outs_mem.push_back(outs);
@@ -156,6 +182,19 @@ public:
 		{
 			layers.push_back(layer(sz[ii], sz[ii + 1]));
 		}
+	}
+
+	std::vector<std::shared_ptr<value>> parameters()
+	{
+		std::vector<std::shared_ptr<value>> outs;
+
+		for (auto ii : layers)
+		{
+			auto p = ii.parameters();
+			outs.insert(outs.end(), p.begin(), p.end());
+		}
+
+		return outs;
 	}
 
 	std::vector<std::shared_ptr<value>> operator()(std::vector<std::shared_ptr<value>> x)
