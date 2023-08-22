@@ -128,6 +128,11 @@ public:
 		return out;
 	}
 
+	void setData(float d)
+	{
+		data = d;
+	}
+
 	operator float() const
 	{
 		return data;

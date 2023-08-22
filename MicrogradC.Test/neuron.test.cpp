@@ -486,6 +486,85 @@ TEST(TestNeuron, MLP_Backprop_parameters)
 
 }
 
+TEST(TestNeuron, MLP_Backprop_parameters_training)
+{
+	std::vector<int> layersizes;
+
+	layersizes.push_back(4);
+	layersizes.push_back(4);
+	layersizes.push_back(1);
+
+	mlp m(3, layersizes);
+
+	std::vector<std::shared_ptr<value>> input_values[4];
+	std::vector<std::shared_ptr<value>> results[4];
+	std::vector<std::shared_ptr<value>> localLoss;
+	std::vector<std::shared_ptr<value>> localSum;
+
+	float inputs[4][3] = { {2.0f, 3.0f, -1.0f},
+							{3.0f, -1.0f, 0.5f},
+							{0.5f, 1.0f, 1.0f},
+							{1.0f, 1.0f, -1.0f} };
+
+	value desired_targets[4] = { value(1.0f, "target0"),
+								value(-1.0f, "target1"),
+								value(-1.0f, "target2"),
+								value(1.0f , "target3") };
+
+	for (int jj = 0; jj < 500; jj++)
+	{
+		localLoss.clear();
+		localSum.clear();
+
+		for (int ii = 0; ii < 4; ii++)
+		{
+			make_input(input_values[ii], 3, inputs[ii]);
+			results[ii] = m(input_values[ii]);
+			localLoss.push_back(std::make_shared<value>(*results[ii][0] - desired_targets[ii])); localLoss.back()->set_label(std::string("localLoss") + std::to_string(ii));
+			localSum.push_back(std::make_shared<value>(*(localLoss[ii]) * (*localLoss[ii])));  localSum.back()->set_label(std::string("localSum") + std::to_string(ii));
+		}
+
+		auto localSum01 = std::make_shared<value>(*localSum[0] + *localSum[1]); localSum01->set_label("localSum01");
+		auto localSum23 = std::make_shared<value>(*localSum[2] + *localSum[3]); localSum23->set_label("localSum23");
+		auto localSum0123 = std::make_shared<value>(*localSum01 + *localSum23); localSum0123->set_label("localSum0123");
+
+		//trace(*localSum0123);
+
+		for (auto result : results)
+		{
+			for (auto r : result)
+			{
+				std::cout << *r << '\n';
+			}
+		}
+
+		std::cout << "calculated loss: " << *localSum0123 << std::endl;
+
+		localSum0123->set_grad(1.0);
+		localSum0123->backward();
+
+		auto params = m.parameters();
+
+		std::cout << "size parameters: " << params.size() << std::endl;
+
+		for (auto ii : params)
+		{
+			//std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << '\n';
+			ii->setData(*ii - 0.05f * ii->grad());
+			ii->set_grad(0.0f);
+		}
+	}
+
+
+
+	//trace(*localSum0123);
+
+	
+
+	
+
+}
+
 
 
 
