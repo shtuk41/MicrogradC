@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "..\MikrocradC\neuron.h"
-#include "..\MikrocradC\\trace.h"
+#include <neuron.h>
+#include <trace.h>
 
 
 

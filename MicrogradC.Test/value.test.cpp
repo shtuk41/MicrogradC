@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "..\MikrocradC\value.h"
-#include "..\MikrocradC\\trace.h"
+#include <value.h>
+#include <trace.h>
 
 constexpr float epsilon = 0.00001f;
 
