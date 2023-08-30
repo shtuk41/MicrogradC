@@ -53,6 +53,17 @@ TEST(TestValue, MultAddExpression1)
 	//EXPECT_TRUE(true);
 }
 
+TEST(TestValue, NaturalLog)
+{
+	value a(9.0f, "a");
+	value result = a.log();
+
+	result.set_label("result");
+	std::cout << "Result is " << result << std::endl;
+
+	ASSERT_NEAR(result, 2.197, 0.01);
+}
+
 TEST(TestValue, BasicTrace)
 {
 	value a(2.0f, "a");
@@ -396,4 +407,43 @@ TEST(TestValue, Neuron_backprop_tanh_explicit)
 	EXPECT_NEAR(x2.grad(), 0.5f, 0.01f);
 	EXPECT_NEAR(w1.grad(), 1.0f, 0.01f);
 	EXPECT_NEAR(x1.grad(), -1.5f, 0.01f);
+}
+
+TEST(TestValue, DivisionBackward)
+{
+
+	auto x1 = value(2.0f, "x1");
+	auto x2 = value(4.0f, "x2");
+	auto x3 = value(-3.0f, "x3");
+
+	auto x4 = x2 / x3; x4.set_label("x4");
+	auto x5 = x1 + x4; x5.set_label("x5");
+
+
+	x5.set_grad(1.0f);
+	x5.backward();
+	trace(x5);
+
+	std::cout << "result: " << x5 << std::endl;
+
+
+	EXPECT_NEAR(x5, 0.667f, 0.01);
+}
+
+TEST(TestValue, LogBackward)
+{
+
+	auto x1 = value(2.0f, "x1");
+	auto x2 = value(4.0f, "x2");
+	auto x3 = x2.log(); x3.set_label("x3");
+	auto x4 = x1 + x3; x4.set_label("x4");
+
+	x4.set_grad(1.0f);
+	x4.backward();
+	trace(x4);
+
+	std::cout << "result: " << x4 << std::endl;
+
+
+	EXPECT_NEAR(x4, 3.386f, 0.01);
 }

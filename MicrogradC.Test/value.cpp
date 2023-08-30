@@ -26,7 +26,8 @@ void trace(value& root)
 		std::cout << "=" << "{" << v[0]->label() << "," << std::fixed << std::setprecision(precision) << *v[0] << "," << v[0]->grad() << "}" << root.op();
 
 		if (root.op().compare("tanh") != 0 &&
-			root.op().compare("exp") != 0)
+			root.op().compare("exp") != 0 && 
+			root.op().compare("log") != 0)
 		{
 			std::cout << "{" << v[1]->label() << "," << *v[1] << "," << v[1]->grad() << "}" << "\n";
 			trace(*v[0]);

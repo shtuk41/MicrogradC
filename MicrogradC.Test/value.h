@@ -175,6 +175,18 @@ public:
 		return out;
 	}
 
+	value log()
+	{
+		std::vector<value*> nv;
+
+		nv.push_back(this);
+
+		float t = std::log(data);
+		auto out = value(t, "", nv, "log");
+
+		return out;
+	}
+
 	std::vector<value*> topo;
 	std::vector<value*> visited;
 
@@ -231,6 +243,15 @@ public:
 		else if (_op.compare("pow") == 0)
 		{
 			_prev[0]->set_grad(_prev[0]->grad() + *_prev[1] * std::pow(*_prev[0], *_prev[1] - 1.0f) * grad());
+		}
+		else if (_op.compare("log") == 0)
+		{
+			_prev[0]->set_grad(_prev[0]->grad() + 1.0f / *_prev[0] * grad());
+		}
+		else if (_op.compare("/") == 0)
+		{
+			_prev[0]->set_grad(_prev[0]->grad() + 1.0f / *_prev[1] * grad());
+			_prev[1]->set_grad(_prev[1]->grad() - *_prev[0] / (*_prev[1] * *_prev[1]) * grad());
 		}
 		
 		return;
