@@ -3,16 +3,6 @@
 #include <iomanip>
 #include <value.h>
 
-value operator+(float f, value& v)
-{
-	return v + f;
-}
-
-value operator*(float f, value& v)
-{
-	return v * f;
-}
-
 void trace(value& root)
 {
 	constexpr int  precision = 4;

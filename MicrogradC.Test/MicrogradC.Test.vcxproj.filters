@@ -7,6 +7,9 @@
     <ClCompile Include="trace.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="value.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
