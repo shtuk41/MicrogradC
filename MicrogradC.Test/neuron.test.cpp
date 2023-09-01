@@ -515,6 +515,7 @@ TEST(TestNeuron, MLP_Backprop_parameters_training)
 	{
 		localLoss.clear();
 		localSum.clear();
+		m.clear();
 
 		for (int ii = 0; ii < 4; ii++)
 		{

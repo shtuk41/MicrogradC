@@ -116,6 +116,16 @@ public:
 	{
 		return out;
 	}
+
+	void clear()
+	{
+		for (auto& r : values_mem)
+		{
+			r.clear();
+		}
+
+		values_mem.clear();
+	}
 };
 
 class layer
@@ -163,6 +173,23 @@ public:
 
 		return outs_mem.back();
 	}
+
+	void clear()
+	{
+		for (auto& n : neurons)
+		{
+			n->clear();
+		}
+
+		for (auto& r : outs_mem)
+		{
+			r.clear();
+		}
+
+		std::vector<std::vector<std::shared_ptr<value>>> v;
+
+		outs_mem.clear();
+	}
 };
 
 class mlp
@@ -209,6 +236,21 @@ public:
 		results.push_back(a);
 
 		return results.back();
+	}
+
+	void clear()
+	{
+		for (auto& l : layers)
+		{
+			l.clear();
+		}
+
+		for (auto& r : results)
+		{
+			r.clear();
+		}
+
+		results.clear();
 	}
 };
 
